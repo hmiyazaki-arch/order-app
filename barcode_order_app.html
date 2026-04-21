@@ -405,10 +405,6 @@ function flushQueue(){
 function isDuplicate(orderId){var n=Date.now();if(recentScans[orderId]&&n-recentScans[orderId]<DUPLICATE_MS)return true;recentScans[orderId]=n;return false;}
 
 function processOrder(orderId,callNumber,fromQueue){
-  // 重複チェックを最初に行い、重複の場合は完全に無視（トーストも表示しない）
-  if(!fromQueue&&isDuplicate(orderId)){
-    return Promise.resolve();
-  }
   // ============================================================
   // callNumber フォールバック（コメントアウト中）
   // callNumberは一覧取得APIから必ず取得できる前提のため不要
@@ -465,6 +461,9 @@ function onScanComplete(raw){
   if(!raw||processing)return;
   if(isCameraOn&&cameraFreezing)return;
   // カメラ連続読取り時: 処理中は静かに無視
+  // 重複チェック（ここで弾くことでparseInput前に完全無視）
+  var rawId=raw.trim();
+  if(isDuplicate(rawId))return;
   var manualMode=isManualMode||!isOnline;
   var parsed=parseInput(raw,manualMode);
   if(!parsed.valid){showScanToast(parsed.reason,'danger');var input=document.getElementById('scanInput');input.value='';input.focus();return;}
