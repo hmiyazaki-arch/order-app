@@ -39,6 +39,10 @@ body { background: #f5f5f3; font-family: -apple-system, BlinkMacSystemFont, 'Seg
 #reader__dashboard { display: none !important; }
 #reader__status_span { display: none !important; }
 #reader__header_message { display: none !important; }
+#reader__scan_region { overflow: hidden; }
+#reader__scan_region > br { display: none !important; }
+#reader__scan_region > span { display: none !important; }
+#reader__scan_region > div:not(#qr-shaded-region) { display: none !important; }
 .camera-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 10; }
 .camera-overlay.show { display: flex; }
 .camera-overlay.success { background: rgba(59,109,17,0.85); }
@@ -76,10 +80,17 @@ body { background: #f5f5f3; font-family: -apple-system, BlinkMacSystemFont, 'Seg
 .tab.error-tab.active { color: #A32D2D; font-weight: 500; border-bottom-color: #A32D2D; }
 .tab.error-tab.active .tab-badge { background: #A32D2D; color: #ffffff; }
 .tab-badge.has-error { background: #FCEBEB; color: #A32D2D; }
-.tab-content { display: none; padding: 12px 16px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; scroll-snap-type: y mandatory; }
+.tab-content { display: none; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
 .tab-content.active { display: block; }
-.orders-grid { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; }
-.orders-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; scroll-snap-align: start; }
+.orders-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 12px 16px 12px; }
+.orders-row { display: contents; }
+
+@media (max-width: 480px) {
+  .tab-content { scroll-snap-type: y mandatory; }
+  .tab-content.active { display: flex; flex-direction: column; }
+  .orders-grid { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 12px; }
+  .orders-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; scroll-snap-align: start; }
+}
 .order-card { background: #f5f5f3; border: 0.5px solid rgba(0,0,0,0.12); border-radius: 8px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.3s ease; }
 .order-card.highlight { border-color: #1D9E75; background: #E1F5EE; }
 .order-card.queued { border-color: #EF9F27; background: #FAEEDA; }
@@ -684,19 +695,13 @@ function renderOrders() {
     document.getElementById('badge-pending').textContent = 0;
     return;
   }
-  var reversed = orders.slice().reverse();
-  var rows = [];
-  for(var i=0; i<reversed.length; i+=4) {
-    var rowCards = reversed.slice(i, i+4).map(function(o) {
-      var isQueued = queuedIds.indexOf(o.orderId) >= 0;
-      return '<div class="order-card'+(isQueued?' queued':'')+'" id="card-'+o.orderId+'">'
-        +'<div class="order-id">'+o.callNumber+'</div>'
-        +'<div class="order-status'+(isQueued?' queued':'')+'" id="status-'+o.orderId+'">'+(isQueued?'送信待ち':'呼出中')+'</div>'
-        +'</div>';
-    }).join('');
-    rows.push('<div class="orders-row">'+rowCards+'</div>');
-  }
-  l.innerHTML = rows.join('');
+  l.innerHTML = orders.slice().reverse().map(function(o) {
+    var isQueued = queuedIds.indexOf(o.orderId) >= 0;
+    return '<div class="order-card'+(isQueued?' queued':'')+'" id="card-'+o.orderId+'">'
+      +'<div class="order-id">'+o.callNumber+'</div>'
+      +'<div class="order-status'+(isQueued?' queued':'')+'" id="status-'+o.orderId+'">'+(isQueued?'送信待ち':'呼出中')+'</div>'
+      +'</div>';
+  }).join('');
   document.getElementById('badge-pending').textContent = orders.length;
 }
 
