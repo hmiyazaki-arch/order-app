@@ -439,7 +439,14 @@ function startCamera() {
   hideScannerPausedText();
 
   // PCでは'environment'が使えない場合があるため'user'にフォールバック
-  var cameraConfig = { facingMode: 'environment' };
+  var cameraConfig = {
+    facingMode: 'environment',
+    videoConstraints: {
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+      facingMode: 'environment'
+    }
+  };
   html5QrCode.start(
     cameraConfig,
     {fps: 10, qrbox: {width: qrW, height: qrH}},
@@ -473,7 +480,7 @@ function startCamera() {
   }).catch(function() {
     // environmentが失敗した場合、userモードで再試行（PC向け）
     html5QrCode.start(
-      {facingMode: 'user'},
+      {facingMode: 'user', videoConstraints: {width: {ideal: 1920}, height: {ideal: 1080}, facingMode: 'user'}},
       {fps: 10, qrbox: {width: qrW, height: qrH}},
       function(decodedText, decodedResult) {
         var location = null;
