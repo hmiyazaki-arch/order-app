@@ -550,7 +550,14 @@ function freezeCamera(type, msg) {
 // 手入力: アルファベット1文字＋数字 → 呼出番号からオーダーIDに変換
 // -----------------------------------------------
 function parseInput(raw, manualMode) {
-  var val = raw.trim().toUpperCase();
+  var val = raw
+    .trim()
+    .replace(/[０-９]/g, function(s) {
+      return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    })
+    .toUpperCase();
+
+  console.log('raw:', raw, 'val:', val);
   if(!manualMode) {
     // A: QRコード形式不正
     if(!QR_RE.test(val)) {
@@ -1046,6 +1053,16 @@ function refreshOrders() {
 // バーコードリーダー関連コード
 // バーコードモード時のみ動作
 // -----------------------------------------------
+// 入力欄の全角→半角リアルタイム変換
+document.getElementById('scanInput').addEventListener('input', function() {
+  var converted = this.value.replace(/[！-～]/g, function(s) {
+    return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+  });
+  if(this.value !== converted) {
+    this.value = converted;
+  }
+});
+
 document.getElementById('scanInput').addEventListener('keydown', function(e) {
   if(!isBarcodeMode) return;
   if(e.key === 'Enter' || e.keyCode === 13 || e.code === 'Enter') {
