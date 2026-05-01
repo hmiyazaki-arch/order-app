@@ -592,7 +592,9 @@ function switchTab(tab) {
   // 更新ボタンは呼出中タブのみ表示
   document.getElementById('refreshBtn').classList.toggle('hidden', !isPending);
   document.getElementById('cameraBtnHeader').classList.toggle('hidden', !isPending);
-  document.getElementById('barcodeBtnHeader').classList.toggle('hidden', !isPending);
+  if(!isMobileDeviceFn()) {
+    document.getElementById('barcodeBtnHeader').classList.toggle('hidden', !isPending);
+  }
   document.getElementById('manualToggleBtn').classList.toggle('hidden', !isPending);
   if(!isPending && isCameraOn) stopCamera();
   // 呼出中タブの場合: 手入力モードならscanAreaを表示、カメラモードなら非表示
@@ -790,7 +792,15 @@ function flushQueue() {
 // -----------------------------------------------
 // バーコードモード
 // -----------------------------------------------
+function isMobileDeviceFn() {
+  return /iPhone|iPad|Android/i.test(navigator.userAgent);
+}
+
 function toggleBarcodeMode(){
+  if(isMobileDeviceFn()) {
+    isBarcodeMode = false;
+    return;
+  }
   isBarcodeMode = !isBarcodeMode;
   if(isBarcodeMode) {
     isManualMode = false;
@@ -1091,4 +1101,10 @@ updateDatetime(); setInterval(updateDatetime, 1000);
 // WebSocket接続開始（wsEnabled=trueの時のみ接続）
 connectWebSocket();
 // 起動時にswitchTab経由でボタン状態初期化・カメラ起動
+// スマートフォン・タブレットの場合はバーコードボタンを非表示
+if(isMobileDeviceFn()) {
+  var barcodeBtnEl = document.getElementById('barcodeBtnHeader');
+  if(barcodeBtnEl) barcodeBtnEl.classList.add('hidden');
+}
+
 switchTab('pending');
