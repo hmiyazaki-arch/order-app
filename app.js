@@ -792,13 +792,30 @@ function toggleBarcodeMode(){
   isBarcodeMode = !isBarcodeMode;
   if(isBarcodeMode) {
     // バーコードON: カメラ・手入力をOFF
-    if(isCameraOn) stopCamera();
     isManualMode = false;
+    if(isCameraOn) {
+      // カメラを止めてからUIを更新
+      if(html5QrCode && isCameraOn) {
+        html5QrCode.stop().then(function(){
+          html5QrCode.clear();
+          html5QrCode = null;
+        }).catch(function(){});
+      }
+      document.getElementById('cameraArea').classList.remove('show');
+      document.getElementById('cameraBtnHeader').textContent = 'カメラ';
+      document.getElementById('cameraBtnHeader').classList.remove('on');
+      isCameraOn = false;
+      cameraScanning = false;
+      cameraFreezing = false;
+      clearTimeout(cameraFreezeTimer);
+      if(scannerObserver) { scannerObserver.disconnect(); scannerObserver = null; }
+    }
+    applyModeUI();
   } else {
     // バーコードOFF: カメラを起動
     startCamera();
+    applyModeUI();
   }
-  applyModeUI();
 }
 
 function toggleManualMode(){
