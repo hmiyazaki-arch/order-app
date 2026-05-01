@@ -791,30 +791,13 @@ function toggleBarcodeMode(){
   isBarcodeMode = !isBarcodeMode;
   if(isBarcodeMode) {
     // バーコードON: カメラ・手入力をOFF
+    if(isCameraOn) stopCamera();
     isManualMode = false;
-    if(isCameraOn) {
-      // カメラを止めてからUIを更新
-      if(html5QrCode && isCameraOn) {
-        html5QrCode.stop().then(function(){
-          html5QrCode.clear();
-          html5QrCode = null;
-        }).catch(function(){});
-      }
-      document.getElementById('cameraArea').classList.remove('show');
-      document.getElementById('cameraBtnHeader').textContent = 'カメラ';
-      document.getElementById('cameraBtnHeader').classList.remove('on');
-      isCameraOn = false;
-      cameraScanning = false;
-      cameraFreezing = false;
-      clearTimeout(cameraFreezeTimer);
-      if(scannerObserver) { scannerObserver.disconnect(); scannerObserver = null; }
-    }
-    applyModeUI();
   } else {
     // バーコードOFF: カメラを起動
     startCamera();
-    applyModeUI();
   }
+  applyModeUI();
 }
 
 function toggleManualMode(){
@@ -853,25 +836,15 @@ function applyModeUI() {
     if(barcodeBtn) barcodeBtn.classList.remove('on');
     isBarcodeMode = false;
   } else if(isBarcodeMode) {
-
-  // 🔥 カメラを強制的に消す（これが今回のキモ）
-  document.getElementById('cameraArea').classList.remove('show');
-
-  scanArea.classList.add('hidden');
-  scanArea.classList.remove('manual-mode');
-  input.classList.remove('manual-input');
-  btn.classList.remove('show');
-
-  label.textContent = 'バーコードリーダー待機中';
-  label.className = 'scan-mode-label show manual';
-
-  toggleBtn.classList.remove('on');
-
-  cameraBtn.textContent = 'カメラ';
-  cameraBtn.classList.remove('on');
-
-  if(barcodeBtn) barcodeBtn.classList.add('on');
-} else {
+    // バーコードモード: 入力欄非表示・カメラ非表示
+    scanArea.classList.add('hidden');
+    scanArea.classList.remove('manual-mode'); input.classList.remove('manual-input'); btn.classList.remove('show');
+    label.className='scan-mode-label'; input.placeholder=PH_DEFAULT;
+    toggleBtn.classList.remove('on');
+    cameraBtn.textContent='カメラ';
+    cameraBtn.classList.remove('on');
+    if(barcodeBtn) barcodeBtn.classList.add('on');
+  } else {
     // カメラOFF・手入力OFFの場合は入力欄を表示
     if(!isCameraOn) {
       scanArea.classList.remove('hidden');
