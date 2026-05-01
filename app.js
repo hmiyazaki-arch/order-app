@@ -832,6 +832,7 @@ function applyModeUI() {
     cameraBtn.textContent='カメラ';
     cameraBtn.classList.remove('on');
     if(barcodeBtn) barcodeBtn.classList.add('on');
+    setTimeout(function(){ input.focus(); }, 50);
   } else {
     // カメラOFF・手入力OFFの場合は入力欄を表示
     if(!isCameraOn) {
