@@ -178,7 +178,16 @@ body { background: #f5f5f3; font-family: -apple-system, BlinkMacSystemFont, 'Seg
   <div class="scan-area" id="scanArea">
     <div class="scan-mode-label" id="scanModeLabel"></div>
     <div class="scan-input-row">
-      <input class="scan-input" id="scanInput" type="text" placeholder="QRコードをスキャンしてください" autocomplete="off" />
+      <input
+        class="scan-input"
+        id="scanInput"
+        type="text"
+        placeholder="QRコードをスキャンしてください"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+      />
       <button class="submit-btn" id="submitBtn" onclick="submitManual()">送信</button>
     </div>
     <div class="scan-toast" id="scanToast"></div>

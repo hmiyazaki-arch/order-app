@@ -804,6 +804,26 @@ function toggleManualMode(){
   }
   applyModeUI();
 }
+function setBarcodeInputMode(enabled) {
+  var input = document.getElementById('scanInput');
+  if(!input) return;
+  if(enabled) {
+    input.setAttribute('lang', 'en');
+    input.setAttribute('inputmode', 'none');
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('spellcheck', 'false');
+  } else {
+    input.removeAttribute('lang');
+    input.removeAttribute('inputmode');
+    input.setAttribute('autocomplete', 'off');
+    input.removeAttribute('autocorrect');
+    input.removeAttribute('autocapitalize');
+    input.removeAttribute('spellcheck');
+  }
+}
+
 function applyModeUI() {
   var scanArea=document.getElementById('scanArea'), input=document.getElementById('scanInput'), btn=document.getElementById('submitBtn'), label=document.getElementById('scanModeLabel'), toggleBtn=document.getElementById('manualToggleBtn');
   var cameraBtn=document.getElementById('cameraBtnHeader');
@@ -815,6 +835,7 @@ function applyModeUI() {
 
   if(showManual){
     // 手入力モード: 入力欄を表示
+    setBarcodeInputMode(false);
     scanArea.classList.remove('hidden');
     scanArea.classList.add('manual-mode'); input.classList.add('manual-input'); btn.classList.add('show');
     if(!isOnline){ label.textContent='手入力（オフライン）'; label.className='scan-mode-label show offline'; input.placeholder=PH_OFFLINE; }
@@ -826,6 +847,7 @@ function applyModeUI() {
     isBarcodeMode = false;
   } else if(isBarcodeMode) {
     // バーコードモード: 入力欄表示・カメラ非表示
+    setBarcodeInputMode(true);
     scanArea.classList.remove('hidden');
     scanArea.classList.remove('manual-mode'); input.classList.remove('manual-input'); btn.classList.remove('show');
     label.className='scan-mode-label'; input.placeholder='バーコードをスキャンしてください';
@@ -836,6 +858,7 @@ function applyModeUI() {
     setTimeout(function(){ input.focus(); }, 50);
   } else {
     // カメラOFF・手入力OFFの場合は入力欄を表示
+    setBarcodeInputMode(false);
     if(!isCameraOn) {
       scanArea.classList.remove('hidden');
     } else {
@@ -1025,7 +1048,7 @@ function refreshOrders() {
 // -----------------------------------------------
 document.getElementById('scanInput').addEventListener('keydown', function(e) {
   if(!isBarcodeMode) return;
-  if(e.key === 'Enter') {
+  if(e.key === 'Enter' || e.keyCode === 13 || e.code === 'Enter') {
     e.preventDefault();
     var v = this.value.trim();
     if(v) onScanComplete(v);
