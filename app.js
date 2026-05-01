@@ -581,8 +581,9 @@ function switchTab(tab) {
   var isPending = tab === 'pending';
   // 更新ボタンは呼出中タブのみ表示
   document.getElementById('refreshBtn').classList.toggle('hidden', !isPending);
-  document.getElementById('manualToggleBtn').classList.toggle('hidden', !isPending);
   document.getElementById('cameraBtnHeader').classList.toggle('hidden', !isPending);
+  document.getElementById('barcodeBtnHeader').classList.toggle('hidden', !isPending);
+  document.getElementById('manualToggleBtn').classList.toggle('hidden', !isPending);
   if(!isPending && isCameraOn) stopCamera();
   // 呼出中タブの場合: 手入力モードならscanAreaを表示、カメラモードなら非表示
   if(isPending) {
@@ -1022,13 +1023,16 @@ function refreshOrders() {
 // バーコードリーダー関連コード
 // バーコードモード時のみ動作
 // -----------------------------------------------
-var SCAN_DELAY = 300;
-var scanTimer = null;
 document.getElementById('scanInput').addEventListener('keydown', function(e) {
-  if(!isBarcodeMode) return; // バーコードモード時のみ動作
-  if(e.key==='Enter'){ e.preventDefault(); var v=this.value.trim(); if(v) onScanComplete(v); return; }
-  clearTimeout(scanTimer);
-  scanTimer=setTimeout(function(){ var v=document.getElementById('scanInput').value.trim(); if(v.length>=1) onScanComplete(v); }, SCAN_DELAY);
+  if(!isBarcodeMode) return;
+  if(e.key === 'Enter') {
+    e.preventDefault();
+    var v = this.value.trim();
+    if(v) onScanComplete(v);
+    var input = this;
+    input.value = '';
+    setTimeout(function(){ input.focus(); }, 50);
+  }
 });
 
 // ===============================
