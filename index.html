@@ -25,6 +25,8 @@ body { background: #f5f5f3; font-family: -apple-system, BlinkMacSystemFont, 'Seg
 .manual-btn.hidden { display: none; }
 .camera-btn.on { background: #E6F1FB; border-color: #378ADD; color: #185FA5; }
 .camera-btn.hidden { display: none; }
+.barcode-btn.on { background: #EAF3DE; border-color: #5A9E2F; color: #3B6D11; }
+.barcode-btn.hidden { display: none; }
 #refreshBtn.hidden { display: none; }
 .header-toast { margin-top: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; text-align: center; display: none; }
 .header-toast.show { display: block; }
@@ -150,6 +152,7 @@ body { background: #f5f5f3; font-family: -apple-system, BlinkMacSystemFont, 'Seg
       <span class="ws-badge" id="wsBadge"></span>
       <button class="btn" id="refreshBtn" onclick="refreshOrders()">更新</button>
       <button class="btn camera-btn" id="cameraBtnHeader" onclick="toggleCamera()">カメラ</button>
+      <button class="btn barcode-btn" id="barcodeBtnHeader" onclick="toggleBarcodeMode()">バーコード</button>
       <button class="btn manual-btn" id="manualToggleBtn" onclick="toggleManualMode()">手入力</button>
     </div>
     <div class="header-toast" id="headerToast"></div>
@@ -770,8 +773,9 @@ function switchTab(tab) {
   var isPending = tab === 'pending';
   // 更新ボタンは呼出中タブのみ表示
   document.getElementById('refreshBtn').classList.toggle('hidden', !isPending);
-  document.getElementById('manualToggleBtn').classList.toggle('hidden', !isPending);
   document.getElementById('cameraBtnHeader').classList.toggle('hidden', !isPending);
+  document.getElementById('barcodeBtnHeader').classList.toggle('hidden', !isPending);
+  document.getElementById('manualToggleBtn').classList.toggle('hidden', !isPending);
   if(!isPending && isCameraOn) stopCamera();
   // 呼出中タブの場合: 手入力モードならscanAreaを表示、カメラモードなら非表示
   if(isPending) {
