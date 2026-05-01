@@ -1033,19 +1033,9 @@ function refreshOrders() {
 }
 
 // -----------------------------------------------
-// バーコードリーダー関連コード（コメントアウト中）
-// 復帰させる場合はこのブロックのコメントを外してください
+// バーコードリーダー関連コード
+// バーコードモード時のみ動作
 // -----------------------------------------------
-/*
-var SCAN_DELAY = 300;
-var scanTimer = null;
-document.getElementById('scanInput').addEventListener('keydown', function(e) {
-  if(e.key==='Enter'){ e.preventDefault(); if(isManualMode||!isOnline) return; var v=this.value.trim(); if(v) onScanComplete(v); return; }
-  if(isManualMode||!isOnline) return;
-  clearTimeout(scanTimer);
-  scanTimer=setTimeout(function(){ var v=document.getElementById('scanInput').value.trim(); if(v.length>=1) onScanComplete(v); }, SCAN_DELAY);
-});
-*/
 
 // ===============================
 // ③ 初期化
