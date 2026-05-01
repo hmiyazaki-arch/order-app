@@ -1,4 +1,3 @@
-<script>
 // ===============================
 // ① 設定
 // ===============================
@@ -1078,4 +1077,3 @@ updateDatetime(); setInterval(updateDatetime, 1000);
 connectWebSocket();
 // 起動時にswitchTab経由でボタン状態初期化・カメラ起動
 switchTab('pending');
-</script>
