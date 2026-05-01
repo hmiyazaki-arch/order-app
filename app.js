@@ -1,4 +1,3 @@
-<script>
 // ===============================
 // ① 設定
 // ===============================
@@ -57,6 +56,9 @@ var isManualMode = state.isManualMode;
 var currentTab = state.currentTab;
 // カメラ状態（state外で管理）
 var html5QrCode=null, isCameraOn=false, cameraFreezing=false, cameraFreezeTimer=null, cameraScanning=false, scannerObserver=null;
+var isBarcodeMode = false;
+var cameraStopping = false;
+var cameraStarting = false;
 
 var RETRYABLE_CODES = [600, 900, 'network'];
 var ERROR_MSGS = {
@@ -396,7 +398,8 @@ function hideScannerPausedText() {
 // ===============================
 function startCamera() {
   // 多重起動防止
-  if(cameraScanning) return;
+  if(cameraScanning || cameraStarting || cameraStopping || isBarcodeMode) return;
+  cameraStarting = true;
   // カメラON時: 手入力ボタンをOFFに・入力欄を非表示
   document.getElementById('manualToggleBtn').classList.remove('on');
   document.getElementById('scanArea').classList.add('hidden');
@@ -407,6 +410,7 @@ function startCamera() {
     html5QrCode = new Html5Qrcode('reader');
   } catch(e) {
     console.error('Html5Qrcode初期化エラー:', e);
+    cameraStarting = false;
     isCameraOn = false;
     cameraScanning = false;
     isManualMode = true;
@@ -467,6 +471,7 @@ function startCamera() {
     function() {}
   ).then(function() {
     // カメラ起動成功後にcameraAreaを表示
+    cameraStarting = false;
     document.getElementById('cameraArea').classList.add('show');
     document.getElementById('cameraBtnHeader').textContent = 'カメラ';
     document.getElementById('cameraBtnHeader').classList.add('on');
@@ -486,10 +491,12 @@ function startCamera() {
       },
       function() {}
     ).then(function() {
+      cameraStarting = false;
       document.getElementById('cameraArea').classList.add('show');
       document.getElementById('cameraBtnHeader').textContent = 'カメラ';
       document.getElementById('cameraBtnHeader').classList.add('on');
     }).catch(function() {
+      cameraStarting = false;
       if(scannerObserver) scannerObserver.disconnect();
       document.getElementById('cameraArea').classList.remove('show');
       isCameraOn = false;
@@ -502,25 +509,23 @@ function startCamera() {
 }
 
 function stopCamera() {
-  // 安全停止: stop()→clear()を順番に実行
-  if(html5QrCode && isCameraOn) {
-    html5QrCode.stop().then(function(){
-      html5QrCode.clear();
-      html5QrCode = null;
-    }).catch(function(e){ console.error('カメラ停止エラー:', e); });
-  }
   document.getElementById('cameraArea').classList.remove('show');
   document.getElementById('cameraBtnHeader').textContent = 'カメラ';
   document.getElementById('cameraBtnHeader').classList.remove('on');
   isCameraOn = false;
   cameraScanning = false;
-  if(typeof scannerPausedTimer !== 'undefined') clearInterval(scannerPausedTimer);
-  if(typeof scannerObserver !== 'undefined' && scannerObserver) { scannerObserver.disconnect(); scannerObserver = null; }
   cameraFreezing = false;
   clearTimeout(cameraFreezeTimer);
   clearTimeout(qrFocusTimer);
   clearFocusFrame();
   document.getElementById('cameraOverlay').className = 'camera-overlay';
+  if(scannerObserver) { scannerObserver.disconnect(); scannerObserver = null; }
+  if(!html5QrCode || cameraStopping) return;
+  cameraStopping = true;
+  html5QrCode.stop()
+    .then(function(){ return html5QrCode.clear(); })
+    .catch(function(e){ console.warn('カメラ停止スキップ:', e); })
+    .finally(function(){ html5QrCode = null; cameraStopping = false; });
 }
 
 function freezeCamera(type, msg) {
@@ -585,7 +590,7 @@ function switchTab(tab) {
       document.getElementById('scanArea').classList.remove('hidden');
     } else {
       document.getElementById('scanArea').classList.add('hidden');
-      if(!isCameraOn) startCamera();
+      if(!isCameraOn && !isBarcodeMode) startCamera();
     }
   } else {
     document.getElementById('scanArea').classList.add('hidden');
@@ -772,28 +777,61 @@ function flushQueue() {
 }
 
 // -----------------------------------------------
+// バーコードモード
+// -----------------------------------------------
+function toggleBarcodeMode(){
+  isBarcodeMode = !isBarcodeMode;
+  if(isBarcodeMode) {
+    isManualMode = false;
+    stopCamera();
+  } else {
+    startCamera();
+  }
+  applyModeUI();
+}
+
+// -----------------------------------------------
 // 手入力モード
 // -----------------------------------------------
 function toggleManualMode(){
   isManualMode=!isManualMode;
-  if(isManualMode && isCameraOn) stopCamera();
-  else if(!isManualMode && !isCameraOn) startCamera();
+  if(isManualMode) {
+    if(isCameraOn) stopCamera();
+    isBarcodeMode = false;
+  } else {
+    startCamera();
+  }
   applyModeUI();
 }
 function applyModeUI() {
   var scanArea=document.getElementById('scanArea'), input=document.getElementById('scanInput'), btn=document.getElementById('submitBtn'), label=document.getElementById('scanModeLabel'), toggleBtn=document.getElementById('manualToggleBtn');
   var cameraBtn=document.getElementById('cameraBtnHeader');
+  var barcodeBtn=document.getElementById('barcodeBtnHeader');
   var showManual=isManualMode||!isOnline;
+
+  // バーコードボタンの色制御
+  if(barcodeBtn) isBarcodeMode ? barcodeBtn.classList.add('on') : barcodeBtn.classList.remove('on');
+
   if(showManual){
     // 手入力モード: 入力欄を表示
     scanArea.classList.remove('hidden');
     scanArea.classList.add('manual-mode'); input.classList.add('manual-input'); btn.classList.add('show');
     if(!isOnline){ label.textContent='手入力（オフライン）'; label.className='scan-mode-label show offline'; input.placeholder=PH_OFFLINE; }
     else{ label.textContent='手入力（リーダー・手入力 両対応）'; label.className='scan-mode-label show manual'; input.placeholder=PH_MANUAL; }
-    // 手入力ON: アンバー / カメラOFF: 白
     toggleBtn.classList.add('on');
     cameraBtn.textContent='カメラ';
     cameraBtn.classList.remove('on');
+    if(barcodeBtn) barcodeBtn.classList.remove('on');
+    isBarcodeMode = false;
+  } else if(isBarcodeMode) {
+    // バーコードモード: 入力欄表示・カメラ非表示
+    scanArea.classList.remove('hidden');
+    scanArea.classList.remove('manual-mode'); input.classList.remove('manual-input'); btn.classList.remove('show');
+    label.className='scan-mode-label'; input.placeholder='バーコードをスキャンしてください';
+    toggleBtn.classList.remove('on');
+    cameraBtn.textContent='カメラ';
+    cameraBtn.classList.remove('on');
+    if(barcodeBtn) barcodeBtn.classList.add('on');
   } else {
     // カメラOFF・手入力OFFの場合は入力欄を表示
     if(!isCameraOn) {
@@ -803,7 +841,6 @@ function applyModeUI() {
     }
     scanArea.classList.remove('manual-mode'); input.classList.remove('manual-input'); btn.classList.remove('show');
     label.className='scan-mode-label'; input.placeholder=PH_DEFAULT;
-    // 手入力OFF: 白
     toggleBtn.classList.remove('on');
   }
 }
@@ -981,19 +1018,17 @@ function refreshOrders() {
 }
 
 // -----------------------------------------------
-// バーコードリーダー関連コード（コメントアウト中）
-// 復帰させる場合はこのブロックのコメントを外してください
+// バーコードリーダー関連コード
+// バーコードモード時のみ動作
 // -----------------------------------------------
-/*
 var SCAN_DELAY = 300;
 var scanTimer = null;
 document.getElementById('scanInput').addEventListener('keydown', function(e) {
-  if(e.key==='Enter'){ e.preventDefault(); if(isManualMode||!isOnline) return; var v=this.value.trim(); if(v) onScanComplete(v); return; }
-  if(isManualMode||!isOnline) return;
+  if(!isBarcodeMode) return; // バーコードモード時のみ動作
+  if(e.key==='Enter'){ e.preventDefault(); var v=this.value.trim(); if(v) onScanComplete(v); return; }
   clearTimeout(scanTimer);
   scanTimer=setTimeout(function(){ var v=document.getElementById('scanInput').value.trim(); if(v.length>=1) onScanComplete(v); }, SCAN_DELAY);
 });
-*/
 
 // ===============================
 // ③ 初期化
@@ -1009,4 +1044,3 @@ updateDatetime(); setInterval(updateDatetime, 1000);
 connectWebSocket();
 // 起動時にswitchTab経由でボタン状態初期化・カメラ起動
 switchTab('pending');
-</script>
