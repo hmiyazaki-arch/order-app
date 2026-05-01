@@ -854,15 +854,25 @@ function applyModeUI() {
     if(barcodeBtn) barcodeBtn.classList.remove('on');
     isBarcodeMode = false;
   } else if(isBarcodeMode) {
-    // バーコードモード: 入力欄非表示・カメラ非表示
-    scanArea.classList.add('hidden');
-    scanArea.classList.remove('manual-mode'); input.classList.remove('manual-input'); btn.classList.remove('show');
-    label.className='scan-mode-label'; input.placeholder=PH_DEFAULT;
-    toggleBtn.classList.remove('on');
-    cameraBtn.textContent='カメラ';
-    cameraBtn.classList.remove('on');
-    if(barcodeBtn) barcodeBtn.classList.add('on');
-  } else {
+
+  // 🔥 カメラを強制的に消す（これが今回のキモ）
+  document.getElementById('cameraArea').classList.remove('show');
+
+  scanArea.classList.add('hidden');
+  scanArea.classList.remove('manual-mode');
+  input.classList.remove('manual-input');
+  btn.classList.remove('show');
+
+  label.textContent = 'バーコードリーダー待機中';
+  label.className = 'scan-mode-label show manual';
+
+  toggleBtn.classList.remove('on');
+
+  cameraBtn.textContent = 'カメラ';
+  cameraBtn.classList.remove('on');
+
+  if(barcodeBtn) barcodeBtn.classList.add('on');
+} else {
     // カメラOFF・手入力OFFの場合は入力欄を表示
     if(!isCameraOn) {
       scanArea.classList.remove('hidden');
