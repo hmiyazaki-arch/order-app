@@ -275,9 +275,12 @@ function toggleCamera() {
   if(isCameraOn) {
     stopCamera();
     isManualMode = true;
+    isBarcodeMode = false;
     applyModeUI();
   } else {
+    isBarcodeMode = false;
     isManualMode = false;
+    applyModeUI();
     startCamera();
   }
 }
